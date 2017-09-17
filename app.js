@@ -7,13 +7,18 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-
 const expressSession = require('express-session')({
 	secret: 'some random string goes here',
 	resave: false,
 	saveUninitialized: false,
 });
+const webpack = require('webpack');
+const webpackConfig = require('./webpack.config');
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const webpackHotMiddleware = require('webpack-hot-middleware');
+
 const User = require('./models/user');
+
 const index = require('./routes/index');
 const api = require('./routes/api/index');
 const users = require('./routes/api/users');
@@ -35,15 +40,30 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-
 app.use(expressSession);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', index);
+// Webpack Server
+const webpackCompiler = webpack(webpackConfig);
+app.use(webpackDevMiddleware(webpackCompiler, {
+    publicPath: webpackConfig.output.publicPath,
+    stats: {
+    	colors: true,
+    	chunks: true,
+    	'errors-only': true,
+    },
+}));
+app.use(webpackHotMiddleware(webpackCompiler, {
+    log: console.log,
+}));
+
+
+
 app.use('/api', api);
 app.use('/api/users', users);
+app.use('/*', index);
 
 // Configure Passport
 passport.use(new LocalStrategy(User.authenticate()));
