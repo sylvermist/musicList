@@ -5,8 +5,8 @@ module.exports = {
 	context: resolve(__dirname, 'src'),
 	entry: [
 		'react-hot-loader/patch',
-		'react-hot-loader/babel',
-		'webpack-hot-middleware/client',
+		'webpack-dev-server/client?http://localhost:8080',
+		'webpack/hot/only-dev-server',
 		'./index.jsx',
 	],
 	output: {
@@ -29,6 +29,6 @@ module.exports = {
 	plugins: [
 		new webpack.HotModuleReplacementPlugin(),
 		new webpack.NamedModulesPlugin(),
-		new webpack.NoEmitOnErrorsPlugin(),
+		
 	],
 };
