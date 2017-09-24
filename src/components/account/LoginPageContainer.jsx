@@ -1,62 +1,46 @@
-require('babel-polyfill');
 import React from 'react';
-import 'whatwg-fetch';
-
-import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { incrementProgress, decrementProgress } from '../../actions/progress';
+import { Redirect } from 'react-router-dom';
+import { logUserIn } from '../../actions/authentication';
 
 import LoginPage from './LoginPage';
+
+require('babel-polyfill');
 
 export class LoginPageContainer extends React.Component {
 	constructor(props) {
 		super(props);
 
 		// bound functions
-		this.attemptLogIn = this.attemptLogIn.bind(this);
+		this.logUserInFunction = this.logUserInFunction.bind(this);
 	}
 
-	async attemptLogIn(userData) {
-		const { decrementProgressAction, incrementProgressAction } = this.props;
-
-		// turn on spinner
-		incrementProgressAction();
-
-		// contact loging API
-		const loginResponse = await fetch(
-			// where to contact
-			'/api/authentication/login',
-			// what to send
-			{
-				method: 'POST',
-				body: JSON.stringify(userData),
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				credentials: 'same-origin',
-			},
-		);
-
-		console.log(loginResponse);
-
-		// turn off spinner
-		decrementProgressAction();
+	logUserInFunction(userData) {
+		const { dispatch } = this.props;
+		dispatch(logUserIn(userData));
 	}
 
 	render() {
+		const { authentication } = this.props;
+
+		if (authentication.isLoggedIn) {
+			return (
+				<Redirect to="/" />
+			);
+		}
+
 		return (
 			<div>
-				<LoginPage loginFunction={this.attemptLogIn} />
+				<LoginPage loginFunction={this.logUserInFunction} />
 			</div>
 		);
 	}
 }
 
-function mapDispatchToProps(dispatch) {
-	return bindActionCreators({
-		incrementProgressAction: incrementProgress,
-		decrementProgressAction: decrementProgress,
-	}, dispatch);
+function mapStateToProps(state) {
+	return {
+		authentication: state.authentication,
+	};
 }
 
-export default connect(null, mapDispatchToProps)(LoginPageContainer);
+export default connect(mapStateToProps)(LoginPageContainer);
